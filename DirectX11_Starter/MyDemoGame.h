@@ -2,6 +2,7 @@
 
 #include <DirectXMath.h>
 #include "DirectXGame.h"
+#include "WICTextureLoader.h"
 #include "Vertex.h"
 #include "MeshFactory.h"
 #include "GameObject.h"
@@ -60,6 +61,8 @@ private:
 	ID3D11Buffer* lightConstantBuffer;
 	VertexShaderConstantBufferLayout dataToSendToVSConstantBuffer;
 	PixelShaderConstantBufferLayout dataToSendToLightConstantBuffer;
+	ID3D11ShaderResourceView* textureSRV;
+	ID3D11SamplerState* samplerState;
 
 	// The matrices to go from model space
 	// to screen space

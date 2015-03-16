@@ -10,6 +10,9 @@ cbuffer lights : register(b1)
 	float padding2;
 }
 
+Texture2D diffuseTexture : register(t0);
+SamplerState basicSampler : register(s0);
+
 
 // Defines the input to this pixel shader
 // - Should match the output of our corresponding vertex shader
@@ -17,6 +20,7 @@ struct VertexToPixel
 {
 	float4 position		: SV_POSITION;
 	float3 normal		: NORMAL;
+	float2 uv			: TEXCOORD;
 };
 
 // Entry point for this pixel shader
@@ -33,5 +37,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3 light2Dir = -normalize(light2Direction);
 	float amount2 = saturate(dot(input.normal, light2Dir));
 
-	return light1Color * amount1 + light2Color * amount2;
+	float4 textureColor = diffuseTexture.Sample(basicSampler, input.uv);
+
+	return light1Color * amount1 + light2Color * amount2 + textureColor;
 }

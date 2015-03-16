@@ -68,9 +68,13 @@ Material::Material(const WCHAR* vertexShaderFile, const WCHAR* pixelShaderFile, 
 }
 
 Material::Material(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader)
+	:pixelShader(pixelShader), vertexShader(vertexShader)
 {
-	this->vertexShader = vertexShader;
-	this->pixelShader = pixelShader;
+}
+
+Material::Material(ID3D11VertexShader* vertexShader, ID3D11PixelShader* pixelShader, ID3D11ShaderResourceView* textureSRV, ID3D11SamplerState* samplerState)
+	:pixelShader(pixelShader), vertexShader(vertexShader), textureSRV(textureSRV), samplerState(samplerState)
+{
 }
 
 
@@ -96,6 +100,14 @@ ID3D11InputLayout* Material::GetInputLayout(){
 
 ID3D11Buffer* Material::GetConstantBuffer(){
 	return vsConstantBuffer;
+}
+
+ID3D11ShaderResourceView** Material::GetTexture(){
+	return &textureSRV;
+}
+
+ID3D11SamplerState** Material::GetSampler(){
+	return &samplerState;
 }
 
 void Material::SetMatrices(XMFLOAT4X4* world, XMFLOAT4X4* view, XMFLOAT4X4* projection){

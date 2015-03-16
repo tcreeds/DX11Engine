@@ -28,6 +28,8 @@
 
 #pragma region Win32 Entry Point (WinMain)
 
+using namespace DirectX;
+
 // Win32 Entry Point
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 				   PSTR cmdLine, int showCmd)
@@ -160,7 +162,8 @@ void MyDemoGame::LoadShadersAndInputLayout()
 	D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
 	{
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,	0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 12,	D3D11_INPUT_PER_VERTEX_DATA, 0}
+		{"NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 12,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
 	// Load Vertex Shader --------------------------------------
@@ -224,7 +227,17 @@ void MyDemoGame::LoadShadersAndInputLayout()
 		NULL,
 		&lightConstantBuffer));
 
-	Material* mat = new Material(vertexShader, pixelShader);
+	CreateWICTextureFromFile(device, deviceContext, L"textures/lavaland.png", 0, &textureSRV);
+	D3D11_SAMPLER_DESC sdesc;
+	ZeroMemory(&sdesc, sizeof(sdesc));
+	sdesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	sdesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	sdesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sdesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+	sdesc.MaxLOD = D3D11_FLOAT32_MAX;
+	device->CreateSamplerState(&sdesc, &samplerState);
+
+	Material* mat = new Material(vertexShader, pixelShader, textureSRV, samplerState);
 
 	//Material* mat = new Material(L"VertexShader.cso", L"PixelShader.cso", device);
 	for (int i = 0; i < entityCount; i++)
@@ -332,6 +345,8 @@ void MyDemoGame::DrawScene()
 		1,
 		&lightConstantBuffer);
 
+
+
 	for (int i = 0; i < entityCount; i++)
 		Draw(entities[i]);
 
@@ -407,6 +422,8 @@ void MyDemoGame::Draw(GameObject* obj){
 	//    between drawing objects that will use different shaders
 	deviceContext->VSSetShader(mat->GetVertexShader(), NULL, 0);
 	deviceContext->PSSetShader(mat->GetPixelShader(), NULL, 0);
+	deviceContext->PSSetShaderResources(0, 1, mat->GetTexture());
+	deviceContext->PSSetSamplers(0, 1, mat->GetSampler());
 
 	// Update the GPU-side constant buffer with our single CPU-side structure
 	//  - Faster than setting individual sub-variables multiple times
@@ -427,6 +444,8 @@ void MyDemoGame::Draw(GameObject* obj){
 		0,	// Corresponds to the constant buffer's register in the vertex shader
 		1,
 		&vsConstantBuffer);
+
+	
 
 	// Set buffers in the input assembler
 	//  - This should be done PER OBJECT you intend to draw, as each object could
