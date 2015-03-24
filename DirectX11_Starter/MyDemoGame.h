@@ -48,6 +48,7 @@ private:
 	void LoadShadersAndInputLayout();
 	void InitializeCameraMatrices();
 	void Draw(GameObject* obj);
+	GameObject* CreateGameObject(const char* name);
 
 private:
 

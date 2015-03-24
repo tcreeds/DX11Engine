@@ -91,6 +91,8 @@ bool MyDemoGame::Init()
 	if( !DirectXGame::Init() )
 		return false;
 
+
+	mainCamera = new Camera();
 	// Create the necessary DirectX buffers to draw something
 	CreateGeometryBuffers();
 
@@ -100,7 +102,7 @@ bool MyDemoGame::Init()
 	// Set up camera-related matrices
 	InitializeCameraMatrices();
 
-	mainCamera = new Camera();
+	
 	light1.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 1);
 	light1.DiffuseColor = XMFLOAT4(0.5f, 0, 0, 1);
 	light1.Direction = XMFLOAT3(0, -1, 0);
@@ -124,15 +126,16 @@ void MyDemoGame::CreateGeometryBuffers()
 	meshFactory->loadOBJ("models/torus.obj", "Torus");
 	meshFactory->loadOBJ("models/helix.obj", "Helix");
 	meshFactory->loadOBJ("models/sphere.obj", "Sphere");
+	meshFactory->loadOBJ("models/box.obj", "Box");
 
-	GameObject* cube = new GameObject();
+	/*GameObject* cube = new GameObject();
 	cube->SetMesh(meshFactory->createMesh("Cube"));
-	cube->Scale(1);
+	//cube->Scale(1);
 	//cube->Translate(0.75f, 0.5f, 0);
 
 	GameObject* torus = new GameObject();
 	torus->SetMesh(meshFactory->createMesh("Torus"));
-	torus->Scale(1);
+	//torus->Scale(1);
 	//torus->Translate(-0.75f, 0.5f, 0);
 
 	GameObject* helix = new GameObject();
@@ -140,15 +143,31 @@ void MyDemoGame::CreateGeometryBuffers()
 
 	GameObject* sphere = new GameObject();
 	sphere->SetMesh(meshFactory->createMesh("Sphere"));
-	sphere->Scale(2);
-	//sphere->Translate(0, -0.5f, 0);
+	//sphere->Scale(2);
+	//sphere->Translate(0, -0.5f, 0);*/
+
+	GameObject* box = new GameObject();
+	box->SetMesh(meshFactory->createMesh("Box"));	
 
 	//entities[entityCount++] = cube;
 	//entities[entityCount++] = torus;
 	//entities[entityCount++] = sphere;
-	entities[entityCount++] = helix;
+	//entities[entityCount++] = helix;
+	entities[entityCount++] = box;
+	mainCamera->FollowTarget(entities[0]->transform);
+
+	GameObject* obj = CreateGameObject("Helix");
+	obj->transform->Translate(5, 0, 0);
+	GameObject* obj2 = CreateGameObject("Torus");
+	obj2->transform->Translate(-5, 0, 0);
 	
-	
+}
+
+GameObject* MyDemoGame::CreateGameObject(const char* name){
+	GameObject* obj = new GameObject();
+	obj->SetMesh(meshFactory->createMesh(name));
+	entities[entityCount++] = obj;
+	return obj;
 }
 
 // Loads shaders from compiled shader object (.cso) files, and uses the
@@ -230,9 +249,9 @@ void MyDemoGame::LoadShadersAndInputLayout()
 	CreateWICTextureFromFile(device, deviceContext, L"textures/lavaland.png", 0, &textureSRV);
 	D3D11_SAMPLER_DESC sdesc;
 	ZeroMemory(&sdesc, sizeof(sdesc));
-	sdesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	sdesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	sdesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	sdesc.AddressU = D3D11_TEXTURE_ADDRESS_MIRROR;
+	sdesc.AddressV = D3D11_TEXTURE_ADDRESS_MIRROR;
+	sdesc.AddressW = D3D11_TEXTURE_ADDRESS_MIRROR;
 	sdesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
 	sdesc.MaxLOD = D3D11_FLOAT32_MAX;
 	device->CreateSamplerState(&sdesc, &samplerState);
@@ -298,10 +317,29 @@ void MyDemoGame::UpdateScene(float dt)
 
 
 	if (GetAsyncKeyState(VK_LEFT) & 0x8000){
-		entities[0]->Rotate(0, 0.001f, 0);
+		entities[0]->transform->RotateEuler(0, 0.001f, 0);
 	}
 	else if (GetAsyncKeyState(VK_RIGHT) & 0x8000){
-		entities[0]->Rotate(0, -0.001f, 0);
+		entities[0]->transform->RotateEuler(0, -0.001f, 0);
+	}
+	else if (GetAsyncKeyState(VK_UP) & 0x8000){
+		entities[0]->transform->RotateEuler(0.001f, 0, 0);
+	}
+	else if (GetAsyncKeyState(VK_DOWN) & 0x8000){
+		entities[0]->transform->RotateEuler(-0.001f, 0, 0);
+	}
+
+	if (GetAsyncKeyState(0x57) & 0x8000){
+		entities[0]->transform->MoveForward(0.01f);
+	}
+	if (GetAsyncKeyState(0x41) & 0x8000){
+		entities[0]->transform->Strafe(-0.01f);
+	}
+	if (GetAsyncKeyState(0x53) & 0x8000){
+		entities[0]->transform->MoveForward(-0.01f);
+	}
+	if (GetAsyncKeyState(0x44) & 0x8000){
+		entities[0]->transform->Strafe(0.01f);
 	}
 	/*
 	// Take input, update game logic, etc.
@@ -404,7 +442,7 @@ void MyDemoGame::Draw(GameObject* obj){
 	//  - Allows us to send the data to the GPU buffer in one step
 	//  - Do this PER OBJECT, before drawing it
 	//mat->SetMatrices(&obj->getTransform(), &mainCamera->getViewMatrix(), &projectionMatrix);
-	dataToSendToVSConstantBuffer.world = obj->getTransform();
+	dataToSendToVSConstantBuffer.world = *(obj->transform->GetMatrix());
 	dataToSendToVSConstantBuffer.view = mainCamera->getViewMatrix();
 	dataToSendToVSConstantBuffer.projection = projectionMatrix;
 	
