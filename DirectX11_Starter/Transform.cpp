@@ -19,24 +19,13 @@ Transform::~Transform()
 }
 
 void Transform::Translate(float x, float y, float z){
-	XMMATRIX mat = XMMatrixTranspose(XMLoadFloat4x4(&matrix));
-	position.x += x;
-	position.y += y;
-	position.z += z;
-	XMMATRIX trans = XMMatrixTranslation(x, y, z);
-	XMMATRIX result = mat * trans;
-	XMStoreFloat4x4(&matrix, XMMatrixTranspose(result));
+	position = XMFLOAT3(position.x + x, position.y + y, position.z + z);
+	UpdateMatrix();
 }
 
 void Transform::RotateEuler(float x, float y, float z){
-	rotation.x += x;
-	rotation.y += y;
-	rotation.x += z;
-	XMMATRIX mat = XMMatrixTranspose(XMLoadFloat4x4(&matrix));
-	XMMATRIX rot = XMMatrixRotationRollPitchYaw(x, y, z);
-	XMMATRIX result = mat * rot;
-	XMStoreFloat4x4(&matrix, XMMatrixTranspose(result));
-	UpdateVectors();
+	rotation = XMFLOAT3(rotation.x + x, rotation.y + y, rotation.z + z);
+	UpdateMatrix();
 }
 
 void Transform::RotateAxisAngle(XMFLOAT3 axis, float angle){
@@ -48,29 +37,27 @@ void Transform::RotateAxisAngle(XMFLOAT3 axis, float angle){
 }
 
 void Transform::Scale(float x, float y, float z){
-	XMMATRIX mat = XMMatrixTranspose(XMLoadFloat4x4(&matrix));
-	XMMATRIX scale = XMMatrixScaling(x, y, z);
-	XMMATRIX result = mat * scale;
-	XMStoreFloat4x4(&matrix, XMMatrixTranspose(result));
+	scale = XMFLOAT3(scale.x * x, scale.y * y, scale.z * z);
+	UpdateMatrix();
 }
 
 void Transform::Scale(float size){
-	XMMATRIX mat = XMMatrixTranspose(XMLoadFloat4x4(&matrix));
-	XMMATRIX scale = XMMatrixScaling(size, size, size);
-	XMMATRIX result = mat * scale;
-	XMStoreFloat4x4(&matrix, XMMatrixTranspose(result));
+	scale = XMFLOAT3(scale.x * size, scale.y * size, scale.z * size);
+	UpdateMatrix();
 }
 
 void Transform::SetPosition(XMFLOAT3 pos){
 	position.x = pos.x;
 	position.y = pos.y;
 	position.z = pos.z;
+	UpdateMatrix();
 }
 
 void Transform::SetPosition(float x, float y, float z){
 	position.x = x;
 	position.y = y;
 	position.z = z;
+	UpdateMatrix();
 }
 
 void Transform::SetRotation(XMFLOAT3 rot){
@@ -97,15 +84,20 @@ XMFLOAT4X4* Transform::GetMatrix(){
 	return &matrix;
 }
 
+void Transform::UpdateMatrix(){
+	
+	XMMATRIX mat = XMMatrixRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
+	mat *= XMMatrixScaling(scale.x, scale.y, scale.z);
+	mat *= XMMatrixTranslation(position.x, position.y, position.z);
+	XMStoreFloat4x4(&matrix, XMMatrixTranspose(mat));
+	UpdateVectors();
+
+}
+
 void Transform::UpdateVectors(){
 
-	forward = XMFLOAT3(0, 0, 1);
-	XMVECTOR f = XMVector3Transform(XMLoadFloat3(&forward), XMLoadFloat4x4(&matrix));
-	XMStoreFloat3(&forward, f);
+	right =		XMFLOAT3(matrix._11, matrix._21, matrix._31);
+	up =		XMFLOAT3(matrix._12, matrix._22, matrix._32);
+	forward =	XMFLOAT3(matrix._13, matrix._23, matrix._33);
 
-	right = XMFLOAT3(1, 0, 0);
-	XMVECTOR r = XMVector3Transform(XMLoadFloat3(&right), XMLoadFloat4x4(&matrix));
-	XMStoreFloat3(&right, r);
-
-	XMVECTOR u = XMVector3Cross(f, r);	
 }

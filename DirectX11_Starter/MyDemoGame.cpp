@@ -317,17 +317,17 @@ void MyDemoGame::UpdateScene(float dt)
 
 
 	if (GetAsyncKeyState(VK_LEFT) & 0x8000){
-		entities[0]->transform->RotateEuler(0, 0.001f, 0);
-	}
-	else if (GetAsyncKeyState(VK_RIGHT) & 0x8000){
 		entities[0]->transform->RotateEuler(0, -0.001f, 0);
 	}
-	else if (GetAsyncKeyState(VK_UP) & 0x8000){
+	else if (GetAsyncKeyState(VK_RIGHT) & 0x8000){
+		entities[0]->transform->RotateEuler(0, 0.001f, 0);
+	}
+	/*else if (GetAsyncKeyState(VK_UP) & 0x8000){
 		entities[0]->transform->RotateEuler(0.001f, 0, 0);
 	}
 	else if (GetAsyncKeyState(VK_DOWN) & 0x8000){
 		entities[0]->transform->RotateEuler(-0.001f, 0, 0);
-	}
+	}*/
 
 	if (GetAsyncKeyState(0x57) & 0x8000){
 		entities[0]->transform->MoveForward(0.01f);

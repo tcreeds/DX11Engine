@@ -20,6 +20,7 @@ public:
 	XMFLOAT3* GetPosition();
 	XMFLOAT3* GetRotation();
 	XMFLOAT4X4* GetMatrix();
+	void UpdateMatrix();
 	void UpdateVectors();	
 	XMFLOAT3 forward;
 	XMFLOAT3 right;
