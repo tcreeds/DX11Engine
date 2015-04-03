@@ -43,6 +43,7 @@ public:
 	void OnMouseMove(WPARAM btnState, int x, int y);
 
 private:
+	void StartGame();
 	// Initialization for our "game" demo
 	void CreateGeometryBuffers();
 	void LoadShadersAndInputLayout();
@@ -52,6 +53,8 @@ private:
 
 private:
 
+	enum GameState{ MAINMENU, GAME };
+	GameState state;
 	// Our basic shaders for this example
 	ID3D11PixelShader* pixelShader;
 	ID3D11VertexShader* vertexShader;

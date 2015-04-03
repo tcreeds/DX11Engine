@@ -92,6 +92,16 @@ bool MyDemoGame::Init()
 		return false;
 
 
+	state = MAINMENU;
+
+	// Successfully initialized
+	return true;
+}
+
+void MyDemoGame::StartGame(){
+
+	state = GAME;
+
 	mainCamera = new Camera();
 	// Create the necessary DirectX buffers to draw something
 	CreateGeometryBuffers();
@@ -102,7 +112,7 @@ bool MyDemoGame::Init()
 	// Set up camera-related matrices
 	InitializeCameraMatrices();
 
-	
+
 	light1.AmbientColor = XMFLOAT4(0.1f, 0.1f, 0.1f, 1);
 	light1.DiffuseColor = XMFLOAT4(0.5f, 0, 0, 1);
 	light1.Direction = XMFLOAT3(0, -1, 0);
@@ -111,8 +121,6 @@ bool MyDemoGame::Init()
 	light2.DiffuseColor = XMFLOAT4(0, 0, 0.5f, 1);
 	light2.Direction = XMFLOAT3(-1, 0, 0);
 
-	// Successfully initialized
-	return true;
 }
 
 // Creates the vertex and index buffers for a single triangle
@@ -313,39 +321,47 @@ void MyDemoGame::OnResize()
 // Update your game state
 void MyDemoGame::UpdateScene(float dt)
 {
-	mainCamera->Update(dt);
+
+	if (state == GAME){
+		mainCamera->Update(dt);
 
 
-	if (GetAsyncKeyState(VK_LEFT) & 0x8000){
-		entities[0]->transform->RotateEuler(0, -0.001f, 0);
-	}
-	else if (GetAsyncKeyState(VK_RIGHT) & 0x8000){
-		entities[0]->transform->RotateEuler(0, 0.001f, 0);
-	}
-	/*else if (GetAsyncKeyState(VK_UP) & 0x8000){
-		entities[0]->transform->RotateEuler(0.001f, 0, 0);
-	}
-	else if (GetAsyncKeyState(VK_DOWN) & 0x8000){
-		entities[0]->transform->RotateEuler(-0.001f, 0, 0);
-	}*/
+		if (GetAsyncKeyState(VK_LEFT) & 0x8000){
+			entities[0]->transform->RotateEuler(0, -0.001f, 0);
+		}
+		else if (GetAsyncKeyState(VK_RIGHT) & 0x8000){
+			entities[0]->transform->RotateEuler(0, 0.001f, 0);
+		}
+		/*else if (GetAsyncKeyState(VK_UP) & 0x8000){
+			entities[0]->transform->RotateEuler(0.001f, 0, 0);
+			}
+			else if (GetAsyncKeyState(VK_DOWN) & 0x8000){
+			entities[0]->transform->RotateEuler(-0.001f, 0, 0);
+			}*/
 
-	if (GetAsyncKeyState(0x57) & 0x8000){
-		entities[0]->transform->MoveForward(0.01f);
-	}
-	if (GetAsyncKeyState(0x41) & 0x8000){
-		entities[0]->transform->Strafe(-0.01f);
-	}
-	if (GetAsyncKeyState(0x53) & 0x8000){
-		entities[0]->transform->MoveForward(-0.01f);
-	}
-	if (GetAsyncKeyState(0x44) & 0x8000){
-		entities[0]->transform->Strafe(0.01f);
-	}
-	/*
-	// Take input, update game logic, etc.
-	for (int i = 0; i < entityCount; i++)
+		if (GetAsyncKeyState(0x57) & 0x8000){
+			entities[0]->transform->MoveForward(0.01f);
+		}
+		if (GetAsyncKeyState(0x41) & 0x8000){
+			entities[0]->transform->Strafe(-0.01f);
+		}
+		if (GetAsyncKeyState(0x53) & 0x8000){
+			entities[0]->transform->MoveForward(-0.01f);
+		}
+		if (GetAsyncKeyState(0x44) & 0x8000){
+			entities[0]->transform->Strafe(0.01f);
+		}
+		/*
+		// Take input, update game logic, etc.
+		for (int i = 0; i < entityCount; i++)
 		entities[i]->Update(dt);
-	*/
+		*/
+	}
+	else if (state == MAINMENU){
+		if (GetAsyncKeyState(VK_RETURN) & 0x8000){
+			StartGame();
+		}
+	}
 }
 
 // Clear the screen, redraw everything, present
@@ -354,45 +370,48 @@ void MyDemoGame::DrawScene()
 	// Background color (Cornflower Blue in this case) for clearing
 	const float color[4] = {0.4f, 0.6f, 0.75f, 0.0f};
 
-	// Clear the buffer (erases what's on the screen)
-	//  - Do this once per frame
-	//  - At the beginning (before drawing anything)
-	deviceContext->ClearRenderTargetView(renderTargetView, color);
-	deviceContext->ClearDepthStencilView(
-		depthStencilView, 
-		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
-		1.0f,
-		0);
+	if (state == GAME){
 
-	dataToSendToLightConstantBuffer.light1Color = light1.DiffuseColor;
-	dataToSendToLightConstantBuffer.light1Direction = light1.Direction;
-	dataToSendToLightConstantBuffer.light2Color = light2.DiffuseColor;
-	dataToSendToLightConstantBuffer.light2Direction = light2.Direction;
+		// Clear the buffer (erases what's on the screen)
+		//  - Do this once per frame
+		//  - At the beginning (before drawing anything)
+		deviceContext->ClearRenderTargetView(renderTargetView, color);
+		deviceContext->ClearDepthStencilView(
+			depthStencilView,
+			D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
+			1.0f,
+			0);
 
-	//updates lighting constant buffer
-	deviceContext->UpdateSubresource(
-		lightConstantBuffer,
-		0,
-		NULL,
-		&dataToSendToLightConstantBuffer,
-		0,
-		0);
+		dataToSendToLightConstantBuffer.light1Color = light1.DiffuseColor;
+		dataToSendToLightConstantBuffer.light1Direction = light1.Direction;
+		dataToSendToLightConstantBuffer.light2Color = light2.DiffuseColor;
+		dataToSendToLightConstantBuffer.light2Direction = light2.Direction;
 
-	deviceContext->PSSetConstantBuffers(
-		1,	// Corresponds to the constant buffer's register in the vertex shader
-		1,
-		&lightConstantBuffer);
+		//updates lighting constant buffer
+		deviceContext->UpdateSubresource(
+			lightConstantBuffer,
+			0,
+			NULL,
+			&dataToSendToLightConstantBuffer,
+			0,
+			0);
+
+		deviceContext->PSSetConstantBuffers(
+			1,	// Corresponds to the constant buffer's register in the vertex shader
+			1,
+			&lightConstantBuffer);
 
 
 
-	for (int i = 0; i < entityCount; i++)
-		Draw(entities[i]);
+		for (int i = 0; i < entityCount; i++)
+			Draw(entities[i]);
 
-	// Present the buffer
-	//  - Puts the stuff on the screen
-	//  - Do this EXACTLY once per frame
-	//  - Always at the end of the frame
-	HR(swapChain->Present(0, 0));
+		// Present the buffer
+		//  - Puts the stuff on the screen
+		//  - Do this EXACTLY once per frame
+		//  - Always at the end of the frame
+		HR(swapChain->Present(0, 0));
+	}
 }
 
 #pragma endregion
